@@ -20,6 +20,7 @@ namespace AddressablesTools.Catalog
         private SerializedType[] ResourceTypes { get; set; }
         private string[] InternalIdPrefixes { get; set; }
 
+        public List<ResourceLocation> Locations { get; set; }
         public Dictionary<object, List<ResourceLocation>> Resources { get; set; }
 
         internal void Read(ContentCatalogDataJson data)
@@ -188,6 +189,7 @@ namespace AddressablesTools.Catalog
                     locations.Add(loc);
                 }
             }
+            Locations = locations;
 
             Resources = new Dictionary<object, List<ResourceLocation>>(buckets.Count);
             for (int i = 0; i < buckets.Count; i++)
@@ -288,30 +290,27 @@ namespace AddressablesTools.Catalog
 
             List<object> newKeys = Resources.Keys.ToList();
 
-            foreach (var value in Resources.Values)
+            foreach (var location in Locations)
             {
-                foreach (var location in value)
+                newLocationHs.Add(location);
+
+                if (location.InternalId == null)
+                    throw new Exception("Location's internal ID cannot be null!");
+
+                if (location.ProviderId == null)
+                    throw new Exception("Location's provider ID cannot be null!");
+
+                int splitIndex = location.InternalId.LastIndexOf('/');
+                if (splitIndex != -1)
                 {
-                    newLocationHs.Add(location);
+                    newInternalIdPrefixes.Add(location.InternalId.Substring(0, splitIndex));
+                }
+                newInternalIdHs.Add(location.InternalId);
+                newProviderIdHs.Add(location.ProviderId);
 
-                    if (location.InternalId == null)
-                        throw new Exception("Location's internal ID cannot be null!");
-
-                    if (location.ProviderId == null)
-                        throw new Exception("Location's provider ID cannot be null!");
-
-                    int splitIndex = location.InternalId.LastIndexOf('/');
-                    if (splitIndex != -1)
-                    {
-                        newInternalIdPrefixes.Add(location.InternalId.Substring(0, splitIndex));
-                    }
-                    newInternalIdHs.Add(location.InternalId);
-                    newProviderIdHs.Add(location.ProviderId);
-
-                    if (location.Type != null)
-                    {
-                        newResourceTypeHs.Add(location.Type);
-                    }
+                if (location.Type != null)
+                {
+                    newResourceTypeHs.Add(location.Type);
                 }
             }
 
